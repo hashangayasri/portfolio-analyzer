@@ -60,8 +60,9 @@ def addSplit(poss_split_date, symbol, poss_split_ratio):
     splits_list.append(split)
 
 
-def getSplits():
-    return pd.concat(splits_list, ignore_index=True)
+def writeSplitInfoToFile(si_file):
+    if splits_list:
+        pd.concat(splits_list, ignore_index=True).to_csv(si_file, index=False)
 
 
 for symbol, transactions in per_symbol:
@@ -77,7 +78,7 @@ for symbol, transactions in per_symbol:
         last_price = row['Price']
 print()
 
-getSplits().to_csv(generated_split_info_file, index=False)
+writeSplitInfoToFile(generated_split_info_file)
 
 if not path.exists(split_info_file):
     copyfile(generated_split_info_file, split_info_file)
@@ -140,7 +141,7 @@ if path.exists(pf_file):
                                                                         last_date))
             addSplit(last_date, row['Symbol'], round(poss_split_ratio_approx))
         qty_mismatched_symbols.append(row['Symbol'])
-    getSplits().to_csv(generated_poss_split_info_file, index=False)
+    writeSplitInfoToFile(generated_poss_split_info_file)
     txp = tx
     txp['Approx. share value'] = txp['Amount'] / txp['Qty']
     for mmi in qty_mismatched_symbols:
