@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # pip install --user pandas openpyxl
 
 import pandas as pd
