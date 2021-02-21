@@ -1,7 +1,8 @@
-Account
-Portfolio.xlsx
+/Account
+/Portfolio.xlsx
 /gen-*
 /data/
+/sample.bak/
 
 .idea/
 
