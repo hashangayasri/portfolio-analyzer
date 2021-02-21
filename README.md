@@ -6,3 +6,11 @@ Currently, the supported input formats are the following files saved via ATrad o
   * "Portfolio.xlsx" file (optional) - Exported via Client -> Portfolio -> Save
 
 These files should be placed in the current working directory where the script is executed from.
+
+
+
+## Setup
+
+### From pip
+
+    $ pip install --user -r requirements.txt
