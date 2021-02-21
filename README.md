@@ -16,6 +16,6 @@ These files should be placed in the current working directory where the script i
     $ pip install --user -r requirements.txt
 
 
-# Running
+## Running
 
     $ ./pf-analyzer.py
