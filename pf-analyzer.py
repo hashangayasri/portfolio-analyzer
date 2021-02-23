@@ -5,6 +5,7 @@
 import pandas as pd
 import numpy as np
 
+from datetime import datetime
 from os import path
 from shutil import copyfile
 
@@ -152,6 +153,23 @@ if path.exists(pf_file):
         print("\n")
     if not mismatched_symbols_found:
         print("No quantity mismatches found. Split info is likely up to date.\n")
+
+    # Dump Quotes file to match the Yahoo Finance import format
+    # pff=pd.DataFrame()
+    # pff['Symbol']=tx['Symbol'].map(lambda s: s.replace('.','') + '0000.CM')
+    # pff['Date']=tx['Date'].dt.strftime('%Y/%m/%d')
+    # pff['Time']='14:29 IST'
+    # pff['Trade Date']=tx['Date'].dt.strftime('%Y%m%d')
+    # pff['Purchase Price']=tx['Price']
+    pff = pd.DataFrame()
+    pff['Symbol'] = pf['Security'].map(lambda s: s.replace('.', '') + '.CM')
+    pff['Date'] = datetime.today().strftime('%Y/%m/%d')
+    pff['Time'] = '14:29 IST'
+    pff['Trade Date'] = datetime.today().strftime('%Y%m%d')
+    pff['Purchase Price'] = pf['Avg Price']
+    pff['Quantity'] = pf['Quantity']
+    pff['Commission'] = (pf['B.E.S Price'] - pf['Avg Price']) * pf['Quantity']
+    pff.sort_values('Commission').to_csv("Quotes.csv")
 else:
     print("\nPortfolio file {} does not exist. Save the Portfolio file as well for more accurate results\n".format(
         pf_file))
