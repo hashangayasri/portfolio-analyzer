@@ -200,7 +200,7 @@ net_expense = qty_amount['Amount'].sum()
 total_expense = net_expense + total_interest_paid
 total_amount_transferred = -txa[txa['Transaction Type'] == "R"]['Amount'].sum()
 pf_value = qty_amount['Sales Proceeds'].sum()
-total_gain_loss = qty_amount['Gain/Loss'].sum()
+total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
 
 print()
 
