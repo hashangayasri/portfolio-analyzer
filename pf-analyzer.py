@@ -199,6 +199,7 @@ total_sold_amount = -tx_filtered_bs[tx_filtered_bs['Amount'] < 0]['Amount'].sum(
 net_expense = qty_amount['Amount'].sum()
 total_expense = net_expense + total_interest_paid
 total_amount_transferred = -txa[txa['Transaction Type'] == "R"]['Amount'].sum()
+cash_balance = total_amount_transferred - total_expense
 pf_value = qty_amount['Sales Proceeds'].sum()
 total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
 
@@ -214,6 +215,8 @@ print("Total interest paid: {0:,.2f}".format(total_interest_paid))
 print("Total expense for the portfolio: {0:,.2f}".format(total_expense))
 print("Total deposits: {0:,.2f}".format(total_amount_transferred))
 print("Current Portfolio value: {0:,.2f}".format(pf_value))
+print("Cash balance: {0:,.2f}".format(cash_balance))
+print("Total value: {0:,.2f}".format(cash_balance + pf_value))
 print("Total Gain/Loss: {0:,.2f}".format(total_gain_loss))
 
 # print(qty_amount.to_string())
