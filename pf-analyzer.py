@@ -8,10 +8,31 @@ import numpy as np
 from datetime import datetime
 from os import path
 from shutil import copyfile
+import argparse
 
 account_file = "Account"
 pf_file = "Portfolio.xlsx"
 split_info_file = "splits.csv"
+
+parser = argparse.ArgumentParser(description='Provides an insight into stock portfolios')
+parser.add_argument('tx_filter_end_date' , type=np.datetime64, nargs='?', default=None,
+                    help='Ignore transactions made after this date')
+parser.add_argument('tx_filter_start_date' , type=np.datetime64, nargs='?', default=None,
+                    help='Ignore transactions made before this date')
+parser.add_argument('--account_file', default=account_file, metavar=account_file,
+                    help='Account file containing all the trasactions')
+parser.add_argument('--pf_file', default=pf_file, metavar=pf_file,
+                    help='Current Portfolio file containing last prices [Optional]')
+parser.add_argument('--split_info_file', default=split_info_file, metavar=split_info_file,
+                    help='Split info file. Approximate split info file will be generated automatically.')
+args = parser.parse_args()
+
+tx_filter_end_date=args.tx_filter_end_date
+tx_filter_start_date=args.tx_filter_start_date
+account_file=args.account_file
+pf_file=args.pf_file
+split_info_file=args.split_info_file
+
 generated_split_info_file = "gen-" + split_info_file
 generated_poss_split_info_file = "gen-poss-" + split_info_file
 
@@ -104,7 +125,14 @@ tx['Qty'] = qty
 tx_filtered = tx
 # tx_filtered = tx_filtered[tx_filtered['Date'] > np.datetime64('today') - pd.Timedelta(weeks=1)]
 # tx_filtered = tx_filtered[tx_filtered['Date'] < np.datetime64('today') - pd.Timedelta(weeks=1)]
+# tx_filtered = tx_filtered[tx_filtered['Date'] < np.datetime64('today') - pd.Timedelta(days=1)]
 # tx_filtered = tx_filtered[tx_filtered['Date'] < np.datetime64('2021-02-01')]
+if tx_filter_end_date:
+    print("Filtering out transactions made after : {}".format(tx_filter_end_date))
+    tx_filtered = tx_filtered[tx_filtered['Date'] <= tx_filter_end_date]
+if tx_filter_start_date:
+    print("Filtering out transactions made before : {}".format(tx_filter_start_date))
+    tx_filtered = tx_filtered[tx_filtered['Date'] >= tx_filter_start_date]
 
 qty_amount = tx_filtered[['Instrument', 'Qty', 'Amount']].groupby('Instrument', as_index=False).sum()
 qty_amount['PPS'] = qty_amount['Amount'] / qty_amount['Qty']
