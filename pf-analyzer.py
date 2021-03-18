@@ -231,7 +231,11 @@ total_expense = net_expense + total_interest_paid
 total_amount_transferred = -txa[txa['Transaction Type'] == "R"]['Amount'].sum()
 cash_balance = total_amount_transferred - total_expense
 pf_value = qty_amount['Sales Proceeds'].sum()
+total_value = cash_balance + pf_value
 total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
+# assert(total_value - total_amount_transferred == total_gain_loss)
+if abs((total_value - total_amount_transferred) - (total_gain_loss)) > 0.1:
+    print("\nBalance mismatch: total_value - total_amount_transferred != total_gain_loss [ {0:,.2f} != {0:,.2f} ]".format(total_value - total_amount_transferred, total_gain_loss))
 
 print()
 
@@ -246,7 +250,7 @@ print("Total expense for the portfolio: {0:,.2f}".format(total_expense))
 print("Total deposits: {0:,.2f}".format(total_amount_transferred))
 print("Current Portfolio value: {0:,.2f}".format(pf_value))
 print("Cash balance: {0:,.2f}".format(cash_balance))
-print("Total value: {0:,.2f}".format(cash_balance + pf_value))
+print("Total value: {0:,.2f}".format(total_value))
 print("Total Gain/Loss: {0:,.2f}".format(total_gain_loss))
 print("Total Gain/Loss %: {0:,.2f}%".format(total_gain_loss/total_amount_transferred * 100))
 # print(qty_amount.to_string())
