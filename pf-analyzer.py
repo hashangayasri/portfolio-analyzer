@@ -41,11 +41,47 @@ generated_split_info_file = "gen-" + split_info_file
 generated_poss_split_info_file = "gen-poss-" + split_info_file
 
 pd.options.display.float_format = '{:,.2f}'.format
+date_format='%Y-%m-%d'
+def getFormattedDate(dt64):
+    return dt64.strftime(date_format)
 
-t = pd.read_excel(account_file, header=2, parse_dates=True)
-t['Date'] = pd.to_datetime(t['Date'], format='%Y-%m-%d')
-txins = t['Transaction Particular'].str.extract(r'(?P<TX_Type>Sale|Purchase) of (?P<Instrument>[A-Z.]*)')
-txa = pd.concat([t, txins], axis=1)
+def readAccountFile(account_file):
+    t = pd.read_excel(account_file, header=2, parse_dates=True)
+    t['Date'] = pd.to_datetime(t['Date'], format=date_format)
+    txins = t['Transaction Particular'].str.extract(r'(?P<TX_Type>Sale|Purchase) of (?P<Instrument>[A-Z.]*)')
+    return pd.concat([t, txins], axis=1)
+
+def getAccountFileRanges(account_files):
+    accountFileRanges=[]
+    for af in account_files:
+        txaf = readAccountFile(af)
+        accountFileRanges.append(((txaf[~txaf['Instrument'].isnull()]['Date'].min(),txaf[~txaf['Instrument'].isnull()]['Date'].max()), txaf, af))
+    accountFileRanges.sort(key=lambda tup: tup[0])
+    return accountFileRanges
+
+def combineTransactions(accountFileRanges):
+    last_end_date = None
+    tx_parts = []
+    print()
+    for afr in accountFileRanges:
+        ((start_date, end_date), txa, account_file_name) = afr
+        print("Transaction file {} contains transactions from {} to {}".format(account_file_name, getFormattedDate(start_date), getFormattedDate(end_date)))
+        if last_end_date is not None:
+            print("Using transactions after the date of {} from the file {}".format(getFormattedDate(last_end_date), account_file_name))
+            txa = txa[txa['Date'] > last_end_date]
+        else:
+            print("Using all transactions from the file {}".format(account_file_name))
+        last_end_date = end_date
+        tx_parts.append(txa)
+    print()
+    return pd.concat(tx_parts, ignore_index=True)
+
+
+account_files = glob.glob(account_file + '*')
+accountFileRanges = getAccountFileRanges(account_files)
+txa = combineTransactions(accountFileRanges)
+#txa=readAccountFile(account_file)
+
 total_interest_paid = txa[txa['Transaction Type'] == 'IN']['Amount'].sum()
 
 tx = txa[~txa['Instrument'].isnull()]
