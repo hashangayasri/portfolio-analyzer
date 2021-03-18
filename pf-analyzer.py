@@ -73,7 +73,7 @@ def setInstrument(df):
     df['Instrument'] = df['Symbol'].map(getMappedInstrument)
 
 
-pd.options.mode.chained_assignment = None  # default='warn' # TODO: Fix this
+pd.options.mode.chained_assignment = None  # default=='warn' # TODO: Fix this
 tx['Symbol'] = tx['Instrument']
 setInstrument(tx)
 
@@ -119,8 +119,6 @@ for _, split in splits.iterrows():
     s['No. of Shares'] = s['No. of Shares'] * split['Ratio']
     s['Price'] = s['Price'] / split['Ratio']
     tx.update(s)
-
-tx
 
 qty = tx['No. of Shares'] * tx['Amount'].transform(np.sign)
 tx = tx.copy()
