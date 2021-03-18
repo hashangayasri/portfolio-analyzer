@@ -27,6 +27,10 @@ parser.add_argument('--split_info_file', default=split_info_file, metavar=split_
                     help='Split info file. Approximate split info file will be generated automatically.')
 args = parser.parse_args()
 
+for variable, value in parser.parse_args()._get_kwargs():
+    if value is not None:
+        print("{} = {}".format(variable, value))
+
 tx_filter_end_date=args.tx_filter_end_date
 tx_filter_start_date=args.tx_filter_start_date
 account_file=args.account_file
