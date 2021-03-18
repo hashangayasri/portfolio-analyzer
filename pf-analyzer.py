@@ -248,5 +248,5 @@ print("Current Portfolio value: {0:,.2f}".format(pf_value))
 print("Cash balance: {0:,.2f}".format(cash_balance))
 print("Total value: {0:,.2f}".format(cash_balance + pf_value))
 print("Total Gain/Loss: {0:,.2f}".format(total_gain_loss))
-
+print("Total Gain/Loss %: {0:,.2f}%".format(total_gain_loss/total_amount_transferred * 100))
 # print(qty_amount.to_string())
