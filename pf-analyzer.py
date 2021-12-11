@@ -13,6 +13,7 @@ import argparse
 
 account_file = "Account"
 pf_file = "Portfolio.xlsx"
+otc_file = "IPO.csv"
 split_info_file = "splits.csv"
 skip_split_info_calculation=False
 skip_quotes_file_generation=False
@@ -29,6 +30,8 @@ parser.add_argument('--account_file', default=account_file, metavar=account_file
                     help='Account file containing all the trasactions or the prefix of Account files containing all the transactions')
 parser.add_argument('--pf_file', default=pf_file, metavar=pf_file,
                     help='Current Portfolio file containing last prices [Optional]')
+parser.add_argument('--otc_file', default=otc_file, metavar=otc_file,
+                    help='OTC/IPO file. This file contains purchases that arent recorded in the Account files.')
 parser.add_argument('--split_info_file', default=split_info_file, metavar=split_info_file,
                     help='Split info file. Approximate split info file will be generated automatically.')
 parser.add_argument('--skip_split_info_calculation', dest='skip_split_info_calculation', default=skip_split_info_calculation, action='store_true',
@@ -58,6 +61,7 @@ tx_filter_end_date=args.tx_filter_end_date
 tx_filter_start_date=args.tx_filter_start_date
 account_file=args.account_file
 pf_file=args.pf_file
+otc_file=args.otc_file
 split_info_file=args.split_info_file
 skip_split_info_calculation=args.skip_split_info_calculation
 skip_quotes_file_generation=args.skip_quotes_file_generation
@@ -75,6 +79,39 @@ date_format='%Y-%m-%d'
 def getFormattedDate(dt64):
     return dt64.strftime(date_format)
 
+def getOTCTrades(otc_file):
+    if not path.exists(otc_file):
+        return pd.DataFrame();
+    otc_trades = pd.read_csv(otc_file)
+
+    otctx = pd.DataFrame(otc_trades['Date'], columns=['Date'])
+    otctx['Date'] = pd.to_datetime(otctx['Date'], format='%Y-%m-%d')
+    otctx['Transaction Type'] = otc_trades['Quantity'].map(lambda q : 'B' if q >= 0 else 'S')
+    otctx['Transaction Particular'] = otc_trades['Quantity'].map(lambda q : 'Purchase of ' if q >= 0 else 'Sale of ') + otc_trades['Symbol'] + '0000'
+    otctx['No. of Shares'] = otc_trades['Quantity']
+    otctx['Price'] = otc_trades['Price']
+    otctx['Amount'] = otc_trades['Price'] * otc_trades['Quantity']
+    otctx['TX_Type'] = otc_trades['Quantity'].map(lambda q : 'Purchase' if q >= 0 else 'Sell')
+    otctx['Instrument'] = otc_trades['Symbol']
+    if(len(otctx) > 0):
+        print("Loaded {} OTC/IPO transactions from {}".format(len(otctx), otc_file))
+
+    otc_buys = otc_trades[otc_trades['Quantity'] > 0]
+    otc_deps = pd.DataFrame(otc_buys['Date'], columns=['Date'])
+    otc_deps['Date'] = pd.to_datetime(otc_deps['Date'], format='%Y-%m-%d')
+    otc_deps['Transaction Type'] = "R"
+    otc_deps['Transaction Particular'] = "Transfer of " + (otc_buys['Price'] * otc_buys['Quantity']).astype(str) + " for the OTC/IPO TX of " + otc_buys['Symbol']
+    otc_deps['No. of Shares'] = 0
+    otc_deps['Price'] = 0
+    otc_deps['Amount'] = - otc_buys['Price'] * otc_buys['Quantity']
+    otc_deps['TX_Type'] = np.nan
+    otc_deps['Instrument'] = np.nan
+
+    all_otc_tx = pd.concat([otctx, otc_deps], ignore_index=True)
+    if(len(all_otc_tx) > 0):
+        print(all_otc_tx)
+    return all_otc_tx
+
 def readAccountFile(account_file):
     t = pd.read_excel(account_file, header=2, parse_dates=True)
     t['Date'] = pd.to_datetime(t['Date'], format=date_format)
@@ -89,7 +126,7 @@ def getAccountFileRanges(account_files):
     accountFileRanges.sort(key=lambda tup: tup[0])
     return accountFileRanges
 
-def combineTransactions(accountFileRanges):
+def combineTransactions(accountFileRanges, otherTransactions = None):
     last_end_date = None
     tx_parts = []
     print()
@@ -108,12 +145,15 @@ def combineTransactions(accountFileRanges):
         last_end_date = end_date
         tx_parts.append(txa)
     print()
+    if otherTransactions is not None:
+        tx_parts.append(otherTransactions)
     return pd.concat(tx_parts, ignore_index=True)
-
 
 account_files = glob.glob(account_file + '*')
 accountFileRanges = getAccountFileRanges(account_files)
-txa = combineTransactions(accountFileRanges)
+otc_transactions = getOTCTrades(otc_file)
+txa = combineTransactions(accountFileRanges, otc_transactions)
+# print(txa)
 #txa=readAccountFile(account_file)
 
 total_interest_paid = txa[txa['Transaction Type'] == 'IN']['Amount'].sum()
