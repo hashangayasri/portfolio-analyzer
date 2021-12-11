@@ -26,7 +26,7 @@ parser.add_argument('tx_filter_end_date' , type=np.datetime64, nargs='?', defaul
 parser.add_argument('tx_filter_start_date' , type=np.datetime64, nargs='?', default=None,
                     help='Ignore transactions made before this date')
 parser.add_argument('--account_file', default=account_file, metavar=account_file,
-                    help='Account file containing all the trasactions')
+                    help='Account file containing all the trasactions or the prefix of Account files containing all the transactions')
 parser.add_argument('--pf_file', default=pf_file, metavar=pf_file,
                     help='Current Portfolio file containing last prices [Optional]')
 parser.add_argument('--split_info_file', default=split_info_file, metavar=split_info_file,
