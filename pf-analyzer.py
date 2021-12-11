@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime
 from os import path
 from shutil import copyfile
+import glob
 import argparse
 
 account_file = "Account"
