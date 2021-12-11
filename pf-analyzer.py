@@ -121,6 +121,8 @@ def readAccountFile(account_file):
 def getAccountFileRanges(account_files):
     accountFileRanges=[]
     for af in account_files:
+        if af.startswith("Account_Summary_of_"):
+            continue
         txaf = readAccountFile(af)
         accountFileRanges.append(((txaf[~txaf['Instrument'].isnull()]['Date'].min(),txaf[~txaf['Instrument'].isnull()]['Date'].max()), txaf, af))
     accountFileRanges.sort(key=lambda tup: tup[0])
