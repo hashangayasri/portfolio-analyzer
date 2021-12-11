@@ -108,8 +108,8 @@ def getOTCTrades(otc_file):
     otc_deps['Instrument'] = np.nan
 
     all_otc_tx = pd.concat([otctx, otc_deps], ignore_index=True)
-    if(len(all_otc_tx) > 0):
-        print(all_otc_tx)
+    # if(len(all_otc_tx) > 0):
+    #     print(all_otc_tx)
     return all_otc_tx
 
 def readAccountFile(account_file):
