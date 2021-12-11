@@ -69,6 +69,10 @@ def combineTransactions(accountFileRanges):
         if last_end_date is not None:
             print("Using transactions after the date of {} from the file {}".format(getFormattedDate(last_end_date), account_file_name))
             txa = txa[txa['Date'] > last_end_date]
+            if last_end_date < start_date:
+                print("WARNING: Potential missing transactions between the dates {} and {}".format(getFormattedDate(last_end_date), getFormattedDate(start_date)))
+            if last_end_date > end_date:
+                print("WARNING: Transactions from the file {} are redundant as all of the transactions have been filtered out".format(account_file_name))
         else:
             print("Using all transactions from the file {}".format(account_file_name))
         last_end_date = end_date
