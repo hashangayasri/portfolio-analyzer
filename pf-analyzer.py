@@ -209,7 +209,7 @@ def calculateSplitInfo():
 
 def writeSplitInfoToFile(si_file):
     if splits_list:
-        pd.concat(splits_list, ignore_index=True).to_csv(si_file, index=False)    
+        pd.concat(splits_list, ignore_index=True).to_csv(si_file, index=False)
     if not path.exists(split_info_file):
         copyfile(si_file, split_info_file)
         print("Split info file {} not found. Copying {}... Please inspect the split info file for any errors.".format(
