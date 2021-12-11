@@ -202,7 +202,6 @@ def calculateSplitInfo():
                 poss_split_ratio = round(last_price / row['Price'])
                 print("Possible split in {} of 1:{} before {}".format(symbol, poss_split_ratio, getFormattedDate(row['Date'])))
                 poss_split_date = row['Date'] - pd.Timedelta(days=1)
-                split_info = []
                 addSplit(poss_split_date, symbol, poss_split_ratio)
             last_price = row['Price']
     print()
