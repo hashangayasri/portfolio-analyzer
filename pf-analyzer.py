@@ -4,6 +4,7 @@
 
 import pandas as pd
 import numpy as np
+import numpy_financial
 
 from datetime import datetime
 from os import path
@@ -355,6 +356,67 @@ def depositFilter(txa):
 def withdrawalFilter(txa):
     return txa['Transaction Type'] == "PV"
 
+def getBalanceChangeSummary(txa):
+    balanceChanges = txa[(depositFilter(txa) | withdrawalFilter(txa))][["Date", "Amount"]].sort_values(by="Date")
+    balanceChanges["Amount"] = - balanceChanges["Amount"]
+    balanceChanges["Balance"] = balanceChanges["Amount"].cumsum()
+    return balanceChanges
+
+def removeBalanceSummaryWithdrawals(balanceChanges):
+    total_withdrawals = - balanceChanges[balanceChanges["Amount"] < 0]["Amount"].sum()
+    deposits = balanceChanges[balanceChanges["Amount"] > 0]
+    for i, row in deposits.iterrows():
+        if total_withdrawals > row["Amount"]:
+            total_withdrawals -= row["Amount"]
+            deposits.drop(i, inplace=True)
+        else:
+            deposits.at[i, "Amount"] = row["Amount"] - total_withdrawals
+            break
+    return deposits
+
+def equalPeriodBalance(balanceChanges, last_balance, last_date, period = 'M'):
+    # remainder = last_balance - balanceChanges["Balance"].values[-1]
+    balanceChanges = balanceChanges.append({"Date":last_date, "Amount":-last_balance, "Balance": 0}, ignore_index=True)
+
+    balanceChanges["Period"] = balanceChanges["Date"].dt.to_period(period)
+    periodSum = balanceChanges[["Period", "Amount"]].groupby("Period").sum().reset_index()
+
+    drange = pd.date_range(start=periodSum["Period"].min().to_timestamp(), end=periodSum["Period"].max().to_timestamp() , freq=period)
+    seriesDict = {}
+    for p in drange:
+        seriesDict[p.to_period(period)] = 0
+    for _, row in periodSum.iterrows():
+        seriesDict[row["Period"]] = row["Amount"]
+    periodBalances =  pd.DataFrame([{"Period" : k, "Amount": v} for k, v in seriesDict.items()])
+
+    return periodBalances
+
+def getIRR(periodBalances):
+    # return np.irr(- periodBalances["Amount"])
+    return round(numpy_financial.irr(- periodBalances["Amount"]), 5)
+
+def toPctString(v):
+    return '{:.2%}'.format(v)
+
+def balanceChangeSummaryToPct(balanceChanges, pct = 1):
+    balanceChangesPct = balanceChanges[["Date"]]
+    balanceChangesPct["Amount %"] =  (balanceChanges["Amount"]  / pct).map(lambda v: ("" if v <0 else "+") + toPctString(v))
+    balanceChangesPct["Balance %"] = (balanceChanges["Balance"] / pct).map(lambda v: toPctString(v))
+    balanceChangesPct.style.format({
+        'Amount %': '{:.2%}'.format,
+        'Balance %': '{:.2%}'.format,
+    })
+    return balanceChangesPct
+
+# Duplicate Code
+def periodBalancesToPct(periodBalances, pct = 1):
+    periodBalancesPct = periodBalances[["Period"]]
+    periodBalancesPct["Amount %"] =  (periodBalances["Amount"] / pct).map(lambda v: ("" if v <0 else "+") + toPctString(v))
+    periodBalancesPct.style.format({
+        'Amount %': '{:.2%}'.format,
+    })
+    return periodBalancesPct
+
 qty_amount['Last Price'] = qty_amount['Instrument'].map(lambda i: last_price[i])
 qty_amount['Last Sell Price'] = qty_amount['Last Price'] / sales_commission
 qty_amount['Current Value %'] = qty_amount['Last Sell Price'] / qty_amount['PPS'] * 100
@@ -377,6 +439,15 @@ total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
 if abs((total_value - total_amount_transferred) - (total_gain_loss)) > 0.1:
     print("\nBalance mismatch: total_value - total_amount_transferred != total_gain_loss [ {0:,.2f} != {0:,.2f} ]".format(total_value - total_amount_transferred, total_gain_loss))
 
+print ("\nBalance change history:")
+balanceChanges = getBalanceChangeSummary(txa)
+print(balanceChanges.to_string(index=False))
+monthlyPeriodBalances = equalPeriodBalance(balanceChanges, total_value, txa["Date"].max())
+print(monthlyPeriodBalances.to_string(index=False))
+print(balanceChangeSummaryToPct(balanceChanges, total_value).to_string(index=False))
+print(periodBalancesToPct(monthlyPeriodBalances, total_value).to_string(index=False))
+monthly_irr=getIRR(monthlyPeriodBalances)
+
 print()
 
 print("Total Purchase Amount: {0:,.2f}".format(total_purchased_amount))
@@ -394,4 +465,5 @@ print("Cash balance: {0:,.2f}".format(cash_balance))
 print("Total value: {0:,.2f}".format(total_value))
 print("Total Gain/Loss: {0:,.2f}".format(total_gain_loss))
 print("Total Gain/Loss %: {0:,.2f}%".format(total_gain_loss/total_amount_transferred * 100))
+print("Fully Liquidated Monthly IRR %: {:.2%}".format(monthly_irr))
 # print(qty_amount.to_string())
