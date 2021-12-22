@@ -439,16 +439,23 @@ total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
 if abs((total_value - total_amount_transferred) - (total_gain_loss)) > 0.1:
     print("\nBalance mismatch: total_value - total_amount_transferred != total_gain_loss [ {0:,.2f} != {0:,.2f} ]".format(total_value - total_amount_transferred, total_gain_loss))
 
-print("\nPortfolio Diversity:")
+print("\nPortfolio Distribution Summary:")
 diversity = qty_amount[['Instrument', 'PPS', 'Last Price']]
 diversity['Gain/Loss %'] = 100 * (qty_amount['Gain/Loss']/ (qty_amount['Amount'].map(lambda p : p if p >=0 else 0)))
-diversity['PF % Last Price'] = 100 * (qty_amount['Sales Proceeds'] / pf_value)
+diversity['PF G/L %'] = 100 * (qty_amount['Gain/Loss']/ qty_amount['Gain/Loss'].sum())
+diversity['PF % @ LastP'] = 100 * (qty_amount['Sales Proceeds'] / pf_value)
+diversity['Cost % PF'] = 100 * (qty_amount['Amount'].map(lambda p : p if p >=0 else 0) / net_expense)
+diversity['PF Rel Growth %'] = 100 * (diversity['PF % @ LastP'] / diversity['Cost % PF'])
 diversity.style.format({
-    'PF % Last Price': '{:.2%}'.format,
-    'Gain/Loss %': '{:.2%}'.format
+    'Gain/Loss %': '{:.2%}'.format,
+    'PF G/L %': '{:.2%}'.format,
+    'PF % @ LastP': '{:.2%}'.format,
+    'Cost % PF': '{:.2%}'.format,
+    'PF Rel Growth %': '{:.2%}'.format
 })
-diversity.sort_values('PF % Last Price', ascending=False, inplace=True)
+diversity.sort_values('PF % @ LastP', ascending=False, inplace=True)
 diversity.reset_index(drop=True, inplace=True)
+diversity['Total %'] = diversity['PF % @ LastP'].cumsum()
 diversity['PPS'] = diversity['PPS'].map(lambda p : p if p >=0 else "Negative")
 print(diversity.to_string(index=True))
 
