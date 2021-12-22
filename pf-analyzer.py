@@ -11,6 +11,8 @@ from shutil import copyfile
 import glob
 import argparse
 
+sales_commission = 1.01133
+
 account_file = "Account"
 pf_file = "Portfolio.xlsx"
 otc_file = "IPO.csv"
@@ -256,7 +258,6 @@ last_traded_price = (tx_filtered if ignore_filtered_out_transactions_for_price e
 
 pf = None
 pf_price = {}
-sales_commission = 1.01133
 qty_mismatched_symbols = []
 
 if path.exists(pf_file):
