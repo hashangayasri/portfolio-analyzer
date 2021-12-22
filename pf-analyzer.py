@@ -389,6 +389,7 @@ def equalPeriodBalance(balanceChanges, last_balance, last_date, period = 'M'):
         seriesDict[row["Period"]] = row["Amount"]
     periodBalances =  pd.DataFrame([{"Period" : k, "Amount": v} for k, v in seriesDict.items()])
 
+    periodBalances["Balance"] = periodBalances["Amount"].cumsum().map(lambda p : p if p >=0 else 0)
     return periodBalances
 
 def getIRR(periodBalances):
@@ -398,24 +399,15 @@ def getIRR(periodBalances):
 def toPctString(v):
     return '{:.2%}'.format(v)
 
-def balanceChangeSummaryToPct(balanceChanges, pct = 1):
-    balanceChangesPct = balanceChanges[["Date"]]
-    balanceChangesPct["Amount %"] =  (balanceChanges["Amount"]  / pct).map(lambda v: ("" if v <0 else "+") + toPctString(v))
-    balanceChangesPct["Balance %"] = (balanceChanges["Balance"] / pct).map(lambda v: toPctString(v))
-    balanceChangesPct.style.format({
+def balancesToPct(balances, pct = 1):
+    balancesPct = balances[[balances.columns[0]]]
+    balancesPct["Amount %"] =  (balances["Amount"] / pct).map(lambda v: ("" if v < 0 else "+") + toPctString(v))
+    balancesPct["Balance %"] = (balances["Balance"] / pct).map(lambda v: toPctString(v))
+    balancesPct.style.format({
         'Amount %': '{:.2%}'.format,
-        'Balance %': '{:.2%}'.format,
+        'Balance %': '{:.2%}'.format
     })
-    return balanceChangesPct
-
-# Duplicate Code
-def periodBalancesToPct(periodBalances, pct = 1):
-    periodBalancesPct = periodBalances[["Period"]]
-    periodBalancesPct["Amount %"] =  (periodBalances["Amount"] / pct).map(lambda v: ("" if v <0 else "+") + toPctString(v))
-    periodBalancesPct.style.format({
-        'Amount %': '{:.2%}'.format,
-    })
-    return periodBalancesPct
+    return balancesPct
 
 qty_amount['Last Price'] = qty_amount['Instrument'].map(lambda i: last_price[i])
 qty_amount['Last Sell Price'] = qty_amount['Last Price'] / sales_commission
@@ -464,8 +456,8 @@ balanceChanges = getBalanceChangeSummary(txa)
 print(balanceChanges.to_string(index=False))
 monthlyPeriodBalances = equalPeriodBalance(balanceChanges, total_value, txa["Date"].max())
 print(monthlyPeriodBalances.to_string(index=False))
-print(balanceChangeSummaryToPct(balanceChanges, total_value).to_string(index=False))
-print(periodBalancesToPct(monthlyPeriodBalances, total_value).to_string(index=False))
+print(balancesToPct(balanceChanges, total_value).to_string(index=False))
+print(balancesToPct(monthlyPeriodBalances, total_value).to_string(index=False))
 monthly_irr=getIRR(monthlyPeriodBalances)
 
 print()
