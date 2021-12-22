@@ -360,7 +360,7 @@ qty_amount['Last Sell Price'] = qty_amount['Last Price'] / sales_commission
 qty_amount['Current Value %'] = qty_amount['Last Sell Price'] / qty_amount['PPS'] * 100
 qty_amount['Sales Proceeds'] = qty_amount['Last Sell Price'] * qty_amount['Qty']
 qty_amount['Gain/Loss'] = qty_amount['Sales Proceeds'] - qty_amount['Amount']
-print(qty_amount.sort_values('Gain/Loss', ascending=False).to_string())
+print(qty_amount.sort_values('Gain/Loss', ascending=False).to_string(index=False))
 
 total_purchased_amount = tx_filtered_bs[tx_filtered_bs['Amount'] >= 0]['Amount'].sum()
 total_sold_amount = -tx_filtered_bs[tx_filtered_bs['Amount'] < 0]['Amount'].sum()
