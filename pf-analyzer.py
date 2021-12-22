@@ -441,7 +441,7 @@ if abs((total_value - total_amount_transferred) - (total_gain_loss)) > 0.1:
 
 print("\nPortfolio Diversity:")
 diversity = qty_amount[['Instrument', 'PPS', 'Last Price']]
-diversity['Gain/Loss %'] = 100 * (qty_amount['Gain/Loss']/ qty_amount['Sales Proceeds'])
+diversity['Gain/Loss %'] = 100 * (qty_amount['Gain/Loss']/ (qty_amount['Amount'].map(lambda p : p if p >=0 else 0)))
 diversity['PF % Last Price'] = 100 * (qty_amount['Sales Proceeds'] / pf_value)
 diversity.style.format({
     'PF % Last Price': '{:.2%}'.format,
