@@ -439,6 +439,17 @@ total_gain_loss = qty_amount['Gain/Loss'].sum() - total_interest_paid
 if abs((total_value - total_amount_transferred) - (total_gain_loss)) > 0.1:
     print("\nBalance mismatch: total_value - total_amount_transferred != total_gain_loss [ {0:,.2f} != {0:,.2f} ]".format(total_value - total_amount_transferred, total_gain_loss))
 
+print("\nPortfolio Diversity:")
+diversity = qty_amount[['Instrument', 'PPS', 'Last Price']]
+diversity['PF % Last Price'] = 100 * (qty_amount['Sales Proceeds'] / pf_value)
+diversity.style.format({
+    'PF % Last Price': '{:.2%}'.format
+})
+diversity.sort_values('PF % Last Price', ascending=False, inplace=True)
+diversity.reset_index()
+diversity['PPS'] = diversity['PPS'].map(lambda p : p if p >=0 else "Negative")
+print(diversity.to_string(index=True))
+
 print ("\nBalance change history:")
 balanceChanges = getBalanceChangeSummary(txa)
 print(balanceChanges.to_string(index=False))
