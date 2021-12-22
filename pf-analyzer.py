@@ -134,9 +134,9 @@ def combineTransactions(accountFileRanges, otherTransactions = None):
     print()
     for afr in accountFileRanges:
         ((start_date, end_date), txa, account_file_name) = afr
-        print("Transaction file {} contains transactions from {} to {}".format(account_file_name, getFormattedDate(start_date), getFormattedDate(end_date)))
+        print("Transaction file {} contains transactions of {} days from {} to {}".format(account_file_name, (end_date - start_date).days + 1, getFormattedDate(start_date), getFormattedDate(end_date)))
         if last_end_date is not None:
-            print("Using transactions after the date of {} from the file {}".format(getFormattedDate(last_end_date), account_file_name))
+            print("Using transactions after the date of {} from the file {} - {} days considered".format(getFormattedDate(last_end_date), account_file_name, (end_date - last_end_date).days))
             txa = txa[txa['Date'] > last_end_date]
             if last_end_date < start_date:
                 print("WARNING: Potential missing transactions between the dates {} and {}".format(getFormattedDate(last_end_date), getFormattedDate(start_date)))
