@@ -349,6 +349,12 @@ tx_filtered_bs = buySellAggregate(tx_filtered.groupby(['Instrument', 'TX_Type'])
 print(tx_filtered_bs.to_string())
 print()
 
+def depositFilter(txa):
+    return txa['Transaction Type'] == "R"
+
+def withdrawalFilter(txa):
+    return txa['Transaction Type'] == "PV"
+
 qty_amount['Last Price'] = qty_amount['Instrument'].map(lambda i: last_price[i])
 qty_amount['Last Sell Price'] = qty_amount['Last Price'] / sales_commission
 qty_amount['Current Value %'] = qty_amount['Last Sell Price'] / qty_amount['PPS'] * 100
@@ -361,8 +367,8 @@ total_sold_amount = -tx_filtered_bs[tx_filtered_bs['Amount'] < 0]['Amount'].sum(
 
 net_expense = qty_amount['Amount'].sum()
 total_expense = net_expense + total_interest_paid
-total_amount_transferred = -txa[txa['Transaction Type'] == "R"]['Amount'].sum()
-total_amount_withdrawn = txa[txa['Transaction Type'] == "PV"]['Amount'].sum()
+total_amount_transferred = -txa[depositFilter(txa)]['Amount'].sum()
+total_amount_withdrawn = txa[withdrawalFilter(txa)]['Amount'].sum()
 cash_balance = total_amount_transferred - total_expense - total_amount_withdrawn
 pf_value = qty_amount['Sales Proceeds'].sum()
 total_value = cash_balance + pf_value
