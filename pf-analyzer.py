@@ -203,7 +203,7 @@ def calculateSplitInfo():
         tx_iter = transactions.iterrows()
         last_price = next(tx_iter)[1]['Price']
         for _, row in tx_iter:
-            if last_price / row['Price'] > 1.75:
+            if row['Price'] != 0 and last_price / row['Price'] > 1.75:
                 poss_split_ratio = round(last_price / row['Price'])
                 print("Possible split in {} of 1:{} before {}".format(symbol, poss_split_ratio, getFormattedDate(row['Date'])))
                 poss_split_date = row['Date'] - pd.Timedelta(days=1)
