@@ -447,9 +447,10 @@ diversity.style.format({
 })
 diversity.sort_values('PF % @ LastP', ascending=False, inplace=True)
 diversity.reset_index(drop=True, inplace=True)
-diversity['Total %'] = diversity['PF % @ LastP'].cumsum()
+diversity['Cum PF %'] = diversity['PF % @ LastP'].cumsum()
 diversity['PPS'] = diversity['PPS'].map(lambda p : p if p >=0 else "Negative")
 print(diversity.to_string(index=True))
+#diversity.to_excel('distribution.xls')
 
 print ("\nBalance change history:")
 balanceChanges = getBalanceChangeSummary(txa)
